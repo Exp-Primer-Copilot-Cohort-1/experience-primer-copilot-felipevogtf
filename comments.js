@@ -1,43 +1,35 @@
-// create web server
-// start web server on port
-// create route to handle comments
-// create route to handle form submission
+// Create web server
+// Create a route for the comments
+// Load the comments from the database
+// Return the comments as JSON
 
-var http = require('http');
-var url = require('url');
+var express = require('express');
+var app = express();
+var bodyParser = require('body-parser');
 var fs = require('fs');
+var path = require('path');
+var commentsPath = path.join(__dirname, 'comments.json');
 
-var server = http.createServer(function(req, res) {
-  var path = url.parse(req.url).pathname;
-  switch(path) {
-    case '/':
-      res.writeHead(200, {'Content-Type': 'text/html'});
-      res.write('<h1>Hello, World</h1>');
-      res.end();
-      break;
-    case '/comments':
-      res.writeHead(200, {'Content-Type': 'text/plain'});
-      res.write('Comments');
-      res.end();
-      break;
-    case '/form':
-      fs.readFile(__dirname + '/form.html', function(err, data) {
-        if (err) return send404(res);
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.write(data, 'utf8');
-        res.end();
-      });
-      break;
-    default:
-      send404(res);
-  }
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
+
+app.get('/comments', function(req, res) {
+  fs.readFile(commentsPath, function(err, data) {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(data);
+  });
 });
 
-function send404(res) {
-  res.writeHead(404);
-  res.write('404');
-  res.end();
-}
+app.post('/comments', function(req, res) {
+  fs.readFile(commentsPath, function(err, data) {
+    var comments = JSON.parse(data);
+    comments.push(req.body);
+    fs.writeFile(commentsPath, JSON.stringify(comments, null, 4), function(err) {
+      res.setHeader('Content-Type', 'application/json');
+      res.send(JSON.stringify(comments));
+    });
+  });
+});
 
-server.listen(8000);
-
+app.listen(3001);
+console.log('Server started: http://localhost:3001/');
